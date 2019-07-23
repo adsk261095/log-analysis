@@ -7,14 +7,12 @@ inorder to run it in Hortonworks 2.5
 use the following:
 export SPARK_MAJOR_VERSION=2
 run using command:
-spark-submit --packages org.apache.spark:spark-streaming-flume_2.11:2.0.0 SparkFlume.py
+spark-submit SparkHdfs.py
 '''
 
 import re
 
 from pyspark import SparkContext
-from pyspark.streaming import StreamingContext
-from pyspark.streaming.flume import FlumeUtils
 
 parts = [
     r'(?P<host>\S+)',                   # host %h
@@ -41,27 +39,27 @@ def extractURLRequestAndStatus(line):
         if request:
            requestFields = request.split()
            if (len(requestFields) > 1):
+            # converted bytearray to string
                 return (str(requestFields[1]), str(status))
 
 
 if __name__ == "__main__":
 
-    sc = SparkContext(appName="StreamingFlumeLogAggregator")
+    sc = SparkContext(appName="SparkHdfsLogAggregator")
     sc.setLogLevel("ERROR")
-    ssc = StreamingContext(sc, 1)
 
-    flumeStream = FlumeUtils.createStream(ssc, "localhost", 9092)
+    logs = sc.sequenceFile('/user/maria_dev/logs/19-07-22/2020/00/')
 
-    lines = flumeStream.map(lambda x: x[1])
+    lines = logs.map(lambda x: x[1])
     urls_status = lines.map(extractURLRequestAndStatus)
 
-    # Reduce by URL over a 1-minute window sliding every second
-    urlStatusCounts = urls_status.map(lambda x: (x, 1)).reduceByKeyAndWindow(lambda x, y: x + y, lambda x, y : x - y, 60, 1)
+    # Reduce by URL over a 5-minute window sliding every second
+    urlStatusMapper = urls_status.map(lambda x: (x, 1))
+    urlStatusReducer = urlStatusMapper.reduceByKey(lambda x, y: x + y)
 
-    # Sort and print the results
-    sortedResults = urlStatusCounts.transform(lambda rdd: rdd.sortBy(lambda x: x[1], False))
-    sortedResults.pprint()
-
-    ssc.checkpoint("/home/maria_dev/spark/checkpoint")
-    ssc.start()
-    ssc.awaitTermination()
+    '''
+    Sort and print the results in
+    descending order of count
+    '''
+    sortedResults = urlStatusReducer.sortBy(lambda x: -x[1])
+    print sortedResults.collect()
