@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workflow-app xmlns="uri:oozie:workflow:0.3" name="daily-log-analysis">
+    <start to="spark-node"/>
+    <action name="spark-node">
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <master>${master}</master>
+            <mode>${mode}</mode>
+            <name>Spark - Daily Log Analysis</name>
+            <jar>SparkHdfs.py</jar>
+        </spark>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+    <kill name="fail">
+        <message>Spark Job failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>
+
