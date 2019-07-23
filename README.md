@@ -1,16 +1,18 @@
-Welcome to the log-analytics wiki!
+Welcome to the **Log-Analytics** wiki!
 
 In this big-data analytics project, I have developed a real-time web server log monitoring system using big data technologies. Below image shows the complete architecture of the project.
 
 ![Log Analysis Architecture](https://github.com/adsk261095/log-analysis/blob/master/Project_architecture.PNG)
 
-For this project, I am using Hortonworks Sandbox version 2.5.
+For this project, I am using **Hortonworks Sandbox version 2.5**.
 
 This project has Modules as follows:
 * ## **Flume**
 In this Flume module, there is a sparkstreamingflume.conf configuration file.
 This configuration file has:
+
 **Source** - Spool Directory where the log will be published by the webserver. This spool directory is being continuously monitored by Flume, for any new additions.
+
 **Sink** - We have 2 sinks, first is the Spark Streaming Application where logs are being transferred using avro and analyzed in real-time. Second is the HDFS where logs are being dumped for historic records.
 Since we have 2 sources, therefore we have 2 channels to which source is feeding the log data.
 
